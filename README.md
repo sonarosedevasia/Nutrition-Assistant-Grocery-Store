@@ -24,8 +24,8 @@ Tech Stack
 
 Setup
 
-git clone <your-repo-link>
-cd online_grocery_store_finalnew2
+git clone https://github.com/sonarosedevasia/Nutrition-Assistant-Grocery-Store.git
+cd Nutrition-Assistant-Grocery-Store
 
 venv\Scripts\activate
 pip install -r requirements.txt
