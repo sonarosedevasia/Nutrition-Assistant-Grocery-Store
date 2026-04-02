@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FreshCart - Product Details</title>
+    <link rel="stylesheet" href="css/shop.css">
+</head>
+<body>
+<!-- ================= NAVBAR ================= -->
+    <nav class="navbar">
+    <a href="home.html" class="logo">FreshCart</a>
+    <div class="nav-links">
+        <a href="user-home.html">🏠 Home</a>
+        <a href="shop-categories.html">🗂 Categories</a>
+        <a href="shop-products.html">🛍 Shop</a>
+        <a href="shop-cart.html" class="cart-link">
+        🛒 Cart
+        <span id="cartCount" class="cart-count">0</span>
+        </a>
+        <a href="user-profile.html">👤 My Account</a>
+        <a href="login.html" class="logout">Logout</a>
+    </div>
+    </nav>
+
+<div class="product-details-container">
+    <button class="details-back-btn" onclick="goBack()">← Back</button>
+    <div class="product-details" id="productDetails">
+        <!-- Product will load here -->
+    </div>
+
+    <h2 class="suggested-title">You May Also Like</h2>
+    <div class="suggested-products grid" id="suggestedContainer">
+        <!-- Suggested products here -->
+    </div>
+
+</div>
+
+<script>
+
+const API_BASE = "http://127.0.0.1:8000";
+const params = new URLSearchParams(window.location.search);
+const productId = params.get("id");
+
+let currentProduct = null;
+let quantity = 1;
+
+// Load product
+async function loadProduct() {
+    const res = await fetch(`${API_BASE}/admin/products/${productId}`);
+    const product = await res.json();
+
+    currentProduct = product;
+
+    renderProduct(product);
+    loadSuggestions(product.id);
+}
+
+function renderProduct(p) {
+
+    let priceText = "";
+    if (p.unit === "piece") {
+        priceText = `₹${p.price} per piece`;
+    } else {
+        priceText = `₹${p.price} for ${p.package_size} ${p.unit}`;
+    }
+
+    let stockMessage = "";
+    let stockClass = "";
+
+    if (p.stock > 10) {
+        stockMessage = "In Stock";
+        stockClass = "stock-green";
+    } else if (p.stock > 4) {
+        stockMessage = "Limited Stock";
+        stockClass = "stock-orange";
+    } else if (p.stock > 0) {
+        stockMessage = `Only ${p.stock} left!`;
+        stockClass = "stock-red";
+    } else {
+        stockMessage = "Out of Stock";
+        stockClass = "stock-red";
+    }
+
+    document.getElementById("productDetails").innerHTML = `
+        <div class="details-layout">
+            <div class="details-image">
+                <img src="${API_BASE}/${p.image_path}">
+            </div>
+
+            <div class="details-info">
+                <h1>${p.name}</h1>
+                <h3>${priceText}</h3>
+
+                <p class="${stockClass}">${stockMessage}</p>
+
+                <p class="description">${p.description || "No description available."}</p>
+
+                <div class="qty-section">
+                    <button onclick="decreaseQty()">-</button>
+                    <span id="qtyValue">1</span>
+                    <button onclick="increaseQty(${p.stock})">+</button>
+                </div>
+
+                <button class="add-btn"
+                        onclick="addToCart()"
+                        ${p.stock === 0 ? "disabled" : ""}>
+                    Add to Cart
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function increaseQty(stock) {
+    if (quantity < stock) {
+        quantity++;
+        document.getElementById("qtyValue").innerText = quantity;
+    }
+}
+
+function decreaseQty() {
+    if (quantity > 1) {
+        quantity--;
+        document.getElementById("qtyValue").innerText = quantity;
+    }
+}
+
+
+
+async function loadSuggestions(currentId) {
+    const res = await fetch(`${API_BASE}/admin/products/list`);
+    const products = await res.json();
+
+    const filtered = products.filter(p => p.id != currentId);
+
+    // Shuffle
+    filtered.sort(() => 0.5 - Math.random());
+
+    const suggestions = filtered.slice(0, 5);
+
+    const container = document.getElementById("suggestedContainer");
+
+    suggestions.forEach(p => {
+        let priceText = "";
+let stockText = "";
+
+if (p.unit === "piece") {
+    priceText = `₹${p.price} per piece`;
+    stockText = `Available: ${p.stock} pieces`;
+} else {
+    priceText = `₹${p.price} for ${p.package_size} ${p.unit}`;
+    stockText = `Available: ${p.stock} packs`;
+}
+
+container.innerHTML += `
+    <div class="card" onclick="openProduct(${p.id})">
+
+        <img src="${API_BASE}/${p.image_path}">
+        <h3>${p.name}</h3>
+
+        <p><strong>${priceText}</strong></p>
+        <p>${stockText}</p>
+
+        <button onclick="addSuggestedToCart(${p.id}, '${p.name}', ${p.price}, '${p.image_path}', event)">
+            Add to Cart
+        </button>
+
+    </div>
+`;
+    });
+}
+
+function openProduct(id) {
+    window.location.href = `shop-product-details.html?id=${id}`;
+}
+function showToast(message) {
+    const toast = document.getElementById("toast");
+    toast.innerText = message;
+    toast.classList.add("show");
+
+    setTimeout(() => {
+        toast.classList.remove("show");
+    }, 2000);
+}
+loadProduct();
+
+async function addToCart() {
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        alert("Please login first");
+        window.location.href = "login.html";
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `http://127.0.0.1:8000/cart/add/${currentProduct.id}?quantity=${quantity}`,
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.detail || "Failed to add to cart");
+            return;
+        }
+
+        showToast("Item added to cart");
+        loadCartCount();
+    } catch (error) {
+        console.error(error);
+        alert("Server error");
+    }
+}
+async function loadCartCount() {
+
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    try {
+
+        const response = await fetch(
+            "http://127.0.0.1:8000/cart/my",
+            {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        const cartItems = await response.json();
+
+        let totalItems = 0;
+
+        cartItems.forEach(item => {
+            totalItems += item.quantity;
+        });
+
+        const badge = document.getElementById("cartCount");
+
+        if (!badge) return;
+
+        if (totalItems === 0) {
+            badge.style.display = "none";
+        } else {
+            badge.style.display = "flex";
+            badge.innerText = totalItems;
+        }
+
+    } catch (error) {
+        console.error("Cart count error:", error);
+    }
+}
+loadCartCount();
+function goBack() {
+    if (document.referrer) {
+        window.history.back();
+    } else {
+        window.location.href = "shop-products.html";
+    }
+}
+</script>
+<div id="toast" class="toast">Item added to cart</div>
+
+</body>
+</html>

@@ -1,0 +1,78 @@
+/* Make video full screen */
+/* Reset default spacing and force full screen */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+}
+
+#bg-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+
+    z-index: -1;
+}
+
+/* Dark overlay for readability */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    width: 100vw;
+    height: 100vh;
+
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
+    z-index: 1;
+}
+
+
+.overlay h1 {
+    font-size: 4rem;
+}
+
+.overlay p {
+    font-size: 1.5rem;
+    margin: 10px 0 20px;
+}
+
+.overlay button {
+    padding: 12px 25px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+/* Order Now Button */
+.overlay button {
+    background-color: #c82333;
+    color: white;
+    padding: 14px 36px;
+    font-size: 18px;
+    border: none;
+    border-radius: 6px;          /* Slightly curved corners */
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Hover effect */
+.overlay button:hover {
+    background-color: #556923;  
+    transform: translateY(-2px);
+}

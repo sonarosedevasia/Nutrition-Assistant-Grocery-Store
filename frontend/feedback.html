@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>FreshCart - Feedback</title>
+<link rel="stylesheet" href="css/shop.css">
+
+<style>
+
+.feedback-box{
+width:400px;
+margin:100px auto;
+background:white;
+padding:30px;
+border-radius:12px;
+text-align:center;
+box-shadow:0 10px 30px rgba(0,0,0,0.1);
+}
+
+.stars{
+font-size:32px;
+cursor:pointer;
+color:#ccc;
+}
+
+.stars span:hover,
+.stars span.active{
+color:#f4b400;
+}
+
+textarea{
+width:100%;
+height:90px;
+margin-top:15px;
+padding:10px;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+button{
+margin-top:15px;
+padding:10px 20px;
+background:#ff5a3c;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="feedback-box">
+
+<h2>Rate your experience</h2>
+
+<p>How was your order experience with FreshCart?</p>
+
+<div class="stars" id="stars">
+<span data-value="1">★</span>
+<span data-value="2">★</span>
+<span data-value="3">★</span>
+<span data-value="4">★</span>
+<span data-value="5">★</span>
+</div>
+
+<textarea id="comment" placeholder="Write your feedback..."></textarea>
+
+<button onclick="submitFeedback()">Submit</button>
+
+</div>
+
+<script>
+
+let rating = 0;
+
+document.querySelectorAll("#stars span").forEach(star => {
+
+star.addEventListener("click", function(){
+
+rating = this.dataset.value;
+
+document.querySelectorAll("#stars span").forEach(s => s.classList.remove("active"));
+
+for(let i=0;i<rating;i++){
+document.querySelectorAll("#stars span")[i].classList.add("active");
+}
+
+});
+
+});
+
+async function submitFeedback(){
+
+const token = localStorage.getItem("token");
+
+const params = new URLSearchParams(window.location.search);
+const orderId = params.get("order_id");
+
+const comment = document.getElementById("comment").value;
+
+if(rating == 0){
+alert("Please select a rating");
+return;
+}
+
+const response = await fetch(
+`http://127.0.0.1:8000/feedback/create?rating=${rating}&comment=${comment}&order_id=${orderId}`,
+{
+method:"POST",
+headers:{
+"Authorization":`Bearer ${token}`
+}
+}
+);
+
+alert("Thank you for your feedback!");
+
+window.location.href="user-home.html";
+
+}
+
+</script>
+
+</body>
+</html>

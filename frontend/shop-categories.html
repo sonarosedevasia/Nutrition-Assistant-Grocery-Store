@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FreshCart - Shop</title>
+    <link rel="stylesheet" href="css/shop.css">
+</head>
+<body>
+<!-- ================= NAVBAR ================= -->
+    <nav class="navbar">
+    <a href="home.html" class="logo">FreshCart</a>
+    <div class="nav-links">
+        <a href="user-home.html">🏠 Home</a>
+        <a href="shop-categories.html">🗂 Categories</a>
+        <a href="shop-products.html">🛍 Shop</a>
+        <a href="shop-cart.html" class="cart-link">
+        🛒 Cart
+        <span id="cartCount" class="cart-count">0</span>
+        </a>
+        <a href="user-profile.html">👤 My Account</a>
+        <a href="login.html" class="logout">Logout</a>
+    </div>
+    </nav>
+
+<div class="category-hero">
+    <button class="back-btn" onclick="goHome()">← Back</button>
+    <h1>FreshCart</h1>
+    <h2>Shop by Category</h2>
+</div>
+
+<div id="categoryContainer" class="grid"></div>
+
+<script>
+const API_BASE = "http://127.0.0.1:8000";
+
+async function loadCategories() {
+    const res = await fetch(`${API_BASE}/admin/categories/list`);
+    const categories = await res.json();
+
+    const container = document.getElementById("categoryContainer");
+    container.innerHTML = "";
+
+    categories.forEach(cat => {
+        container.innerHTML += `
+            <div class="card" onclick="openCategory(${cat.id})">
+                <img src="${API_BASE}/${cat.image_path}">
+                <h3>${cat.name}</h3>
+            </div>
+        `;
+    });
+}
+async function loadCartCount() {
+
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    try {
+
+        const response = await fetch(
+            "http://127.0.0.1:8000/cart/my",
+            {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        const cartItems = await response.json();
+
+        let totalItems = 0;
+
+        cartItems.forEach(item => {
+            totalItems += item.quantity;
+        });
+
+        const badge = document.getElementById("cartCount");
+
+        if (!badge) return;
+
+        if (totalItems === 0) {
+            badge.style.display = "none";
+        } else {
+            badge.style.display = "flex";
+            badge.innerText = totalItems;
+        }
+
+    } catch (error) {
+        console.error("Cart count error:", error);
+    }
+}
+function openCategory(id) {
+    window.location.href = `shop-products.html?category=${id}`;
+}
+
+loadCategories();
+
+loadCartCount();
+function goHome() {
+    window.location.href = "user-home.html";
+}
+</script>
+
+</body>
+</html>

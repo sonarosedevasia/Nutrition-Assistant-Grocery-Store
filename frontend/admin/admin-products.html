@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Products | FreshCart</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<div class="admin-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h2 class="brand">🛒 FreshCart</h2>
+        <p class="subtitle">Admin Panel</p>
+
+        <nav>
+            <a href="admin-dashboard.html">
+                <span class="icon">📊</span> Dashboard
+            </a>
+
+            <a href="admin-categories.html">
+                <span class="icon">🏷️</span> Categories
+            </a>
+
+            <a href="admin-products.html" class="active">
+                <span class="icon">📦</span> Products
+            </a>
+
+          <a href="admin-users.html">
+<span class="icon">👥</span>
+Users
+</a>
+            <a href="admin-orders.html">
+            <span class="icon">🧾</span>
+            Orders
+            </a>
+            <a href="admin-feedback.html">
+<span class="icon">⭐</span>
+Feedback
+</a>
+
+            <a href="../login.html" class="logout">Logout</a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+
+        <h1>Manage Products</h1>
+        <p class="welcome">Add and manage grocery products</p>
+
+        <div class="product-layout">
+
+            <!-- ADD / EDIT PRODUCT -->
+            <div class="add-product-card">
+                <h3>Add New Product</h3>
+
+                <form class="product-form" id="productForm">
+
+                    <!-- hidden edit id -->
+                    <input type="hidden" id="editingProductId">
+
+                    <div class="form-group">
+                        <label>Product Name</label>
+                        <input type="text" id="productName" placeholder="Eg: Apple">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="productCategory"></select>
+                    </div>
+
+                    <label>Nutrient Type</label>
+<select id="editNutrientType">
+<option value="none">None</option>
+<option value="vitamin">Vitamin</option>
+<option value="fiber">Fiber</option>
+<option value="protein">Protein</option>
+<option value="calcium">Calcium</option>
+</select>
+
+                    <div class="form-group">
+                        <label>Price (₹)</label>
+                        <input type="number"
+                        id="productPrice"
+                        placeholder="Eg: 120.50"
+                        step="0.01"
+                        min="0">
+                    </div>
+
+
+                    <div class="form-group">
+                        <label>Stock Quantity</label>
+                        <input type="number" id="productStock" placeholder="Eg: 50">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Package Size</label>
+                        <input type="number" step="0.1" id="productPackageSize" placeholder="Eg: 1">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Unit</label>
+                        <select id="productUnit">
+                            <option value="kg">Kg</option>
+                            <option value="gram">Gram</option>
+                            <option value="liter">Liter</option>
+                            <option value="ml">ML</option>
+                            <option value="piece">Piece</option>
+                        </select>
+                    </div>
+                    <label>Nutrient Type</label>
+
+                    <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="productDescription"
+                    rows="4"
+                    placeholder="Enter product description..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Main Product Image</label>
+                        <input type="file" id="productImage" accept="image/*"
+                               onchange="previewMainImage(event)">
+                        <div class="image-preview" id="imagePreviewBox" style="display:none;">
+                            <img id="mainPreview">
+                        </div>
+
+                    </div>
+
+                    <button type="submit" class="add-btn" id="submitBtn">
+                        Add Product
+                    </button>
+
+                </form>
+            </div>
+
+            <!-- PRODUCT LIST -->
+            <div class="table-card">
+                <h3>Existing Products</h3>
+                <div class="search-box">
+                    <input type="text" id="productSearch" placeholder="Search product..."
+                    onkeyup="filterProducts()">
+                </div>
+
+
+                <table class="category-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody></tbody>
+                </table>
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script>
+const API_BASE = "http://127.0.0.1:8000";
+function filterProducts() {
+    const searchValue = document.getElementById("productSearch").value.toLowerCase();
+    const rows = document.querySelectorAll(".category-table tbody tr");
+
+    rows.forEach(row => {
+        const productName = row.children[1].innerText.toLowerCase();
+
+        if (productName.includes(searchValue)) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
+    });
+}
+
+
+/* DOM */
+const form = document.getElementById("productForm");
+const nameInput = document.getElementById("productName");
+const categorySelect = document.getElementById("productCategory");
+const priceInput = document.getElementById("productPrice");
+const stockInput = document.getElementById("productStock");
+const packageSizeInput = document.getElementById("productPackageSize");
+const unitInput = document.getElementById("productUnit");
+const descriptionInput = document.getElementById("productDescription");
+const imageInput = document.getElementById("productImage");
+const tableBody = document.querySelector(".category-table tbody");
+const editIdInput = document.getElementById("editingProductId");
+const submitBtn = document.getElementById("submitBtn");
+const previewImg = document.getElementById("mainPreview");
+
+/* ---------- IMAGE PREVIEW ---------- */
+function previewMainImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+        previewImg.src = URL.createObjectURL(file);
+        previewImg.style.display = "block";
+        document.getElementById("imagePreviewBox").style.display = "block";
+    }
+}
+
+/* ---------- LOAD CATEGORIES ---------- */
+async function loadCategories() {
+    const res = await fetch(`${API_BASE}/admin/categories/list`);
+    const categories = await res.json();
+
+    categorySelect.innerHTML = `<option value="">Select category</option>`;
+    categories.forEach(cat => {
+        categorySelect.innerHTML += `
+            <option value="${cat.id}">${cat.name}</option>
+        `;
+    });
+}
+
+/* ---------- ADD / UPDATE PRODUCT ---------- */
+form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    if (!nameInput.value || !categorySelect.value || !priceInput.value || !stockInput.value) {
+        alert("Please fill all fields");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("name", nameInput.value);
+    formData.append("category_id", categorySelect.value);
+    formData.append("nutrient_type", document.getElementById("editNutrientType").value)
+    formData.append("price", priceInput.value);
+    formData.append("stock", stockInput.value);
+    formData.append("description", descriptionInput.value);
+    formData.append("package_size", packageSizeInput.value);
+    formData.append("unit", unitInput.value);
+
+
+    if (imageInput.files[0]) {
+        formData.append("image", imageInput.files[0]);
+    }
+
+    let url = `${API_BASE}/admin/products/add`;
+    let method = "POST";
+
+    if (editIdInput.value) {
+        url = `${API_BASE}/admin/products/${editIdInput.value}`;
+        method = "PUT";
+    }
+
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(url, {
+        method: method,
+        headers: {
+        "Authorization": `Bearer ${token}`
+        },
+        body: formData
+        });
+    if (!res.ok) {
+        alert("Operation failed");
+        return;
+    }
+
+    resetForm();
+    loadProducts();
+});
+
+/* ---------- LOAD PRODUCTS ---------- */
+async function loadProducts() {
+    const res = await fetch(`${API_BASE}/admin/products/list`);
+    const products = await res.json();
+
+    tableBody.innerHTML = "";
+
+    products.forEach((p, index) => {
+        tableBody.innerHTML += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${p.name}</td>
+                <td>${p.category_name}</td>
+                <td>₹${p.price}</td>
+                <td>${p.stock}</td>
+                <td class="action-cell">
+                    <button class="edit-btn"
+                        onclick="editProduct(
+                            ${p.id},
+                            '${p.name}',
+                            ${p.price},
+                            ${p.stock},
+                            ${p.package_size},
+                            '${p.unit}',
+                            ${p.category_id},
+                            '${p.description}',
+                            '${p.image_path}'
+                        )">
+                        Edit
+                    </button>
+                    <button class="delete-btn"
+                        onclick="deleteProduct(${p.id})">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+/* ---------- EDIT PRODUCT ---------- */
+function editProduct(id, name, price, stock, package_size, unit, categoryId,description,imagePath, nutrientType){
+    editIdInput.value = id;
+    nameInput.value = name;
+    priceInput.value = price;
+    stockInput.value = stock;
+    packageSizeInput.value = package_size;
+    unitInput.value = unit;
+    categorySelect.value = categoryId;
+    document.getElementById("editNutrientType").value = "none";
+    descriptionInput.value = description;
+
+    if (imagePath) {
+        previewImg.src = `${API_BASE}/${imagePath}`;
+        previewImg.style.display = "block";
+        document.getElementById("imagePreviewBox").style.display = "block";
+    }
+
+    submitBtn.innerText = "Update Product";
+    submitBtn.style.background = "#f59e0b";
+}
+
+/* ---------- DELETE PRODUCT ---------- */
+async function deleteProduct(id) {
+    if (!confirm("Delete this product?")) return;
+
+    const token = localStorage.getItem("token");
+
+await fetch(`${API_BASE}/admin/products/${id}`, {
+    method: "DELETE",
+    headers: {
+        "Authorization": `Bearer ${token}`
+    }
+});
+    loadProducts();
+}
+
+/* ---------- RESET FORM ---------- */
+function resetForm() {
+    form.reset();
+    editIdInput.value = "";
+
+    submitBtn.innerText = "Add Product";
+    submitBtn.style.background = "#28a745";
+
+    const preview = document.getElementById("mainPreview");
+    preview.src = "";
+    preview.style.display = "none";
+    document.getElementById("imagePreviewBox").style.display = "none";
+}
+
+
+/* INITIAL LOAD */
+loadCategories();
+loadProducts();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FreshCart - Checkout</title>
+    <link rel="stylesheet" href="css/shop.css">
+    <style>
+.upi-box {
+    background: #f1fff6;
+    border: 2px solid #1abc9c;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 15px;
+    display: none;
+    transition: all 0.3s ease;
+}
+
+.upi-id {
+    background: white;
+    padding: 8px;
+    border-radius: 6px;
+    margin: 5px 0 10px 0;
+    font-weight: bold;
+    color: #16a085;
+}
+
+.upi-box input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 8px 0;
+    font-size: 14px;
+}
+
+.total-row {
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 10px;
+}
+.summary-total span:last-child {
+    font-weight: bold;
+    color: #16a34a;
+    font-size: 18px;
+}
+.section-title {
+    font-size: 22px;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    font-size: 14px;
+    color: #1f2937;
+}
+
+.form-group label span {
+    color: #ef4444;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background: #f9fafb;
+}
+
+.form-group textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #16a34a;
+    outline: none;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+}
+/* ===== PAYMENT CARD UI ===== */
+
+.payment-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.payment-card {
+    display: block;
+    border: 2px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #ffffff;
+}
+
+.payment-card:hover {
+    border-color: #16a34a;
+    background: #f0fdf4;
+}
+
+.payment-card.active {
+    border-color: #16a34a;
+    background: #e7f7ec;
+}
+
+.payment-title {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.payment-sub {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+/* UPI expanded box */
+.upi-modern {
+    display: none;
+    background: #e7f7ec;
+    border: 2px solid #16a34a;
+    padding: 20px;
+    border-radius: 14px;
+    margin-bottom: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+.upi-id-box {
+    background: #ffffff;
+    padding: 10px 14px;
+    border-radius: 10px;
+    margin: 10px 0;
+    font-weight: 600;
+    color: #047857;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.checkout-btn {
+    transition: all 0.3s ease;
+}
+
+.checkout-btn:hover {
+    transform: scale(1.02);
+}
+</style>
+</head>
+<body>
+<!-- ================= NAVBAR ================= -->
+    <nav class="navbar">
+    <a href="home.html" class="logo">FreshCart</a>
+    <div class="logo">FreshCart</div>
+    <div class="nav-links">
+        <a href="user-home.html">🏠 Home</a>
+        <a href="shop-categories.html">🗂 Categories</a>
+        <a href="shop-products.html">🛍 Shop</a>
+        <a href="shop-cart.html" class="cart-link">
+        🛒 Cart
+        <span id="cartCount" class="cart-count">0</span>
+        </a>
+        <a href="user-profile.html">👤 My Account</a>
+        <a href="login.html" class="logout">Logout</a>
+    </div>
+    </nav>
+<div class="cart-hero">
+    <button class="details-back-btn hero-back" onclick="goBack()">← Back</button>
+    <h1>Checkout</h1>
+</div>
+
+<div class="cart-container checkout">
+    <div class="cart-layout">
+
+        <!-- LEFT SIDE: DELIVERY FORM -->
+        <div class="cart-items">
+
+           <h2 class="section-title">Delivery Information</h2>
+
+<div class="form-group">
+    <label>Full Name <span>*</span></label>
+    <input type="text" id="deliveryName" placeholder="Enter your full name">
+</div>
+
+<div class="form-group">
+    <label>Phone Number <span>*</span></label>
+    <input type="text" id="deliveryPhone" placeholder="Enter your phone number">
+</div>
+
+<div class="form-group">
+    <label>Delivery Address <span>*</span></label>
+    <textarea id="deliveryAddress" placeholder="Enter complete delivery address"></textarea>
+</div>
+
+<div class="form-group">
+    <label>City <span>*</span></label>
+    <input type="text" id="deliveryCity" placeholder="Enter city">
+</div>
+
+<div class="form-group">
+    <label>Pincode <span>*</span></label>
+    <input type="text" id="deliveryPincode" placeholder="Enter pincode">
+</div>
+
+            <h3 class="section-title">Payment Method</h3>
+
+<div class="payment-options">
+
+    <!-- COD CARD -->
+    <label class="payment-card active" id="codCard">
+        <input type="radio" name="payment" value="cod" checked hidden>
+        <div class="payment-content">
+            <div class="payment-title">Cash on Delivery</div>
+            <div class="payment-sub">Pay when you receive</div>
+        </div>
+    </label>
+
+    <!-- UPI CARD -->
+    <label class="payment-card" id="upiCard">
+        <input type="radio" name="payment" value="upi" hidden>
+        <div class="payment-content">
+            <div class="payment-title">Pay via UPI</div>
+            <div class="payment-sub">Google Pay, PhonePe, Paytm, etc.</div>
+        </div>
+    </label>
+
+</div>
+
+<!-- UPI EXPANDED SECTION -->
+<div id="upiSection" class="upi-modern">
+    <div class="upi-header">
+        <strong>Pay to UPI ID:</strong>
+        <div class="upi-id-box">freshcart@upi</div>
+        <small id="upiAmountText"></small>
+    </div>
+
+    <div class="form-group">
+    <button type="button" onclick="markPaid()">I have completed payment</button>
+</div>
+</div>
+
+            <button onclick="placeOrder()" class="checkout-btn" id="confirmBtn">
+                <span id="btnText">Confirm Order</span>
+                <span id="spinner" style="display:none;">⏳ Processing...</span>
+            </button>
+
+        </div>
+
+        <!-- RIGHT SIDE: ORDER SUMMARY -->
+        <div class="order-summary">
+            <h2>Order Summary</h2>
+
+            <div id="summaryItems"></div>
+
+            <hr>
+
+            <div class="summary-total">
+                <span>Total</span>
+                <span id="totalAmount">₹0</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+
+const API_BASE = "http://127.0.0.1:8000";
+let upiPaid = false;
+async function loadSummary() {
+
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(`${API_BASE}/cart/my`, {
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
+    });
+
+    const cart = await response.json();
+
+    let subtotal = 0;
+    const container = document.getElementById("summaryItems");
+    container.innerHTML = "";
+
+    cart.forEach(item => {
+
+        subtotal += item.total;
+
+        container.innerHTML += `
+            <div class="summary-row">
+                <span>${item.product_name} x ${item.quantity}</span>
+                <span>₹${item.total.toFixed(2)}</span>
+            </div>
+        `;
+    });
+
+    const tax = subtotal * 0.10;
+    const grandTotal = subtotal + tax;
+
+    container.innerHTML += `
+        <hr>
+        <div class="summary-row">
+            <span>Subtotal</span>
+            <span>₹${subtotal.toFixed(2)}</span>
+        </div>
+        <div class="summary-row">
+            <span>Tax (10%)</span>
+            <span>₹${tax.toFixed(2)}</span>
+        </div>
+    `;
+
+    // ✅ Update only original static total
+    document.getElementById("totalAmount").innerText =
+        "₹" + grandTotal.toFixed(2);
+}
+// Toggle UPI section
+const paymentRadios = document.querySelectorAll('input[name="payment"]');
+const upiSection = document.getElementById("upiSection");
+const codCard = document.getElementById("codCard");
+const upiCard = document.getElementById("upiCard");
+
+upiSection.style.display = "none";
+
+paymentRadios.forEach(radio => {
+    radio.addEventListener("change", function () {
+
+        // Remove active class
+        codCard.classList.remove("active");
+        upiCard.classList.remove("active");
+
+        if (this.value === "upi") {
+            upiSection.style.display = "block";
+            upiCard.classList.add("active");
+        } else {
+            upiSection.style.display = "none";
+            codCard.classList.add("active");
+        }
+    });
+});
+
+async function placeOrder() {
+
+    const token = localStorage.getItem("token");
+
+    const name = document.getElementById("deliveryName").value;
+    const phone = document.getElementById("deliveryPhone").value;
+    const address = document.getElementById("deliveryAddress").value;
+    const city = document.getElementById("deliveryCity").value;
+    const pincode = document.getElementById("deliveryPincode").value;
+
+    const payment = document.querySelector(
+        'input[name="payment"]:checked'
+    ).value;
+
+    if (!name || !phone || !address || !city || !pincode) {
+    alert("Please fill all delivery fields");
+    return;
+}
+
+/* Phone number validation (exactly 10 digits) */
+if (!/^\d{10}$/.test(phone)) {
+    alert("Phone number must be exactly 10 digits");
+    return;
+}
+
+    const btn = document.getElementById("confirmBtn");
+    const btnText = document.getElementById("btnText");
+    const spinner = document.getElementById("spinner");
+    if (payment === "upi") {
+    if (!upiPaid) {
+        alert("Please complete payment and click 'I have completed payment'");
+        return;
+    }
+}
+    // Show loading
+    btn.disabled = true;
+    btnText.style.display = "none";
+    spinner.style.display = "inline";
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+
+        const response = await fetch(
+            `${API_BASE}/orders/create?delivery_name=${name}&delivery_phone=${phone}&delivery_address=${address}&delivery_city=${city}&delivery_pincode=${pincode}&payment_method=${payment}`,
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.detail || "Order failed");
+        }
+
+        window.location.href =
+            `order-success.html?order_id=${data.order_id}`;
+
+    } catch (error) {
+
+        alert(error.message);
+
+        // Reset button if error
+        btn.disabled = false;
+        btnText.style.display = "inline";
+        spinner.style.display = "none";
+    }
+}
+async function loadCartCount() {
+
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    try {
+
+        const response = await fetch(
+            "http://127.0.0.1:8000/cart/my",
+            {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        const cartItems = await response.json();
+
+        let totalItems = 0;
+
+        cartItems.forEach(item => {
+            totalItems += item.quantity;
+        });
+
+        const badge = document.getElementById("cartCount");
+
+        if (!badge) return;
+
+        if (totalItems === 0) {
+            badge.style.display = "none";
+        } else {
+            badge.style.display = "flex";
+            badge.innerText = totalItems;
+        }
+
+    } catch (error) {
+        console.error("Cart count error:", error);
+    }
+}
+loadCartCount();
+
+function parseJwt(token) {
+    return JSON.parse(atob(token.split('.')[1]));
+}
+
+
+function goBack() {
+    window.history.back();
+}
+
+loadSummary();
+function markPaid() {
+    upiPaid = true;
+    alert("Please click Confirm Order to complete your order. Otherwise it will not be saved.");
+}
+</script>
+
+</body>
+</html>

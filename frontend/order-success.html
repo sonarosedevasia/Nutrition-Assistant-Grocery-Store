@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Order Success - FreshCart</title>
+    <link rel="stylesheet" href="css/shop.css">
+</head>
+
+<body>
+<!-- ================= NAVBAR ================= -->
+    <nav class="navbar">
+    <a href="home.html" class="logo">FreshCart</a>
+    <div class="nav-links">
+        <a href="user-home.html">🏠 Home</a>
+        <a href="shop-categories.html">🗂 Categories</a>
+        <a href="shop-products.html">🛍 Shop</a>
+        <a href="user-profile.html">👤 My Account</a>
+        <a href="login.html" class="logout">Logout</a>
+    </div>
+    </nav>
+<div class="success-container">
+
+    <!-- SUCCESS HEADER -->
+    <div class="success-card">
+        <div class="success-icon">✔</div>
+        <h1>Order Placed Successfully!</h1>
+        <p>Thank you for your order. Your groceries will be delivered soon.</p>
+    </div>
+
+    <!-- ORDER SUMMARY -->
+    <div class="summary-card">
+
+        <h2>Order Summary</h2>
+
+        <div class="summary-grid">
+            <div>
+                <label>Customer Name</label>
+                <p id="customerName"></p>
+            </div>
+
+            <div>
+                <label>Phone Number</label>
+                <p id="customerPhone"></p>
+            </div>
+        </div>
+
+        <div class="address-section">
+            <label>Delivery Address</label>
+            <p id="customerAddress"></p>
+        </div>
+
+        <hr>
+
+        <h3>Items Ordered</h3>
+
+        <div id="itemsContainer"></div>
+
+        <div class="total-row">
+            <span>Subtotal</span>
+            <span id="orderSubtotal"></span>
+        </div>
+
+        <div class="total-row">
+            <span>Tax (10%)</span>
+            <span id="orderTax"></span>
+        </div>
+
+    <hr>
+
+        <div class="total-row total-final">
+            <span>Total</span>
+            <span id="orderTotal"></span>
+        </div>
+
+    </div>
+
+    <!-- NUTRITIONAL TIPS -->
+    <div class="tips-card">
+
+        <h2>Nutritional Tips</h2>
+
+        <div class="tips-grid">
+
+            <div class="tip">
+                <div class="tip-icon">🍎</div>
+                <h4>Fruits are Power-Packed</h4>
+                <p>Fruits are rich in vitamins and antioxidants that boost immunity and overall health.</p>
+            </div>
+
+            <div class="tip">
+                <div class="tip-icon">🥦</div>
+                <h4>Vegetables for Vitality</h4>
+                <p>Green vegetables provide essential nutrients, fiber, and minerals for optimal body function.</p>
+            </div>
+
+            <div class="tip">
+                <div class="tip-icon">💧</div>
+                <h4>Stay Hydrated</h4>
+                <p>Drink plenty of water throughout the day to keep your body hydrated and energized.</p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- BUTTONS -->
+<div class="success-buttons">
+
+    <button onclick="goFeedback()" class="primary-btn">
+        ⭐ Give Feedback
+    </button>
+
+    <button onclick="goHome()" class="primary-btn">
+        Back to Home
+    </button>
+
+    <button onclick="continueShopping()" class="outline-btn">
+        Continue Shopping
+    </button>
+
+</div>
+
+</div>
+
+<script>
+
+const API_BASE = "http://127.0.0.1:8000";
+
+async function loadOrderDetails() {
+
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get("order_id");
+
+    if (!orderId) return;
+
+    const token = localStorage.getItem("token");
+
+    try {
+
+        const response = await fetch(
+            `${API_BASE}/orders/${orderId}`,
+            {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Failed to load order");
+        }
+
+        const order = await response.json();
+
+        // Fill customer info
+        document.getElementById("customerName").innerText = order.delivery_name;
+        document.getElementById("customerPhone").innerText = order.delivery_phone;
+        document.getElementById("customerAddress").innerText =
+            `${order.delivery_address}, ${order.delivery_city} - ${order.delivery_pincode}`;
+
+        // Fill items
+        const container = document.getElementById("itemsContainer");
+        container.innerHTML = "";
+
+        order.items.forEach(item => {
+
+    container.innerHTML += `
+        <div class="item-row">
+
+            <img src="http://127.0.0.1:8000/${item.image}"
+     class="item-img"
+     onerror="this.src='https://via.placeholder.com/60'">
+
+            <div class="item-details">
+                <strong>${item.product_name}</strong>
+                <p>Qty: ${item.quantity}</p>
+            </div>
+
+            <div class="item-price">
+                ₹${item.total.toFixed(2)}
+            </div>
+
+        </div>
+    `;
+});
+        // Fill total
+        // Calculate subtotal from items
+let subtotal = 0;
+order.items.forEach(item => {
+    subtotal += item.total;
+});
+
+const tax = subtotal * 0.10;
+const finalTotal = subtotal + tax;
+
+// Fill values
+document.getElementById("orderSubtotal").innerText =
+    "₹" + subtotal.toFixed(2);
+
+document.getElementById("orderTax").innerText =
+    "₹" + tax.toFixed(2);
+
+document.getElementById("orderTotal").innerText =
+    "₹" + finalTotal.toFixed(2);
+
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+function goHome() {
+    window.location.href = "user-home.html";
+}
+
+function continueShopping() {
+    window.location.href = "shop-categories.html";
+}
+
+function goFeedback(){
+
+const params = new URLSearchParams(window.location.search);
+const orderId = params.get("order_id");
+
+window.location.href = `feedback.html?order_id=${orderId}`;
+
+}
+
+loadOrderDetails();
+</script>
+
+</body>
+</html>

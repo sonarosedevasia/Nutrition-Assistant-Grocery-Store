@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Users | FreshCart</title>
+<link rel="stylesheet" href="admin.css">
+</head>
+
+<body>
+
+<div class="admin-container">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+
+<h2 class="brand">🛒 FreshCart</h2>
+<p class="subtitle">Admin Panel</p>
+
+<nav>
+
+<a href="admin-dashboard.html">
+<span class="icon">📊</span>
+Dashboard
+</a>
+
+<a href="admin-categories.html">
+<span class="icon">🏷️</span>
+Categories
+</a>
+
+<a href="admin-products.html">
+<span class="icon">📦</span>
+Products
+</a>
+
+<a href="admin-users.html" class="active">
+<span class="icon">👥</span>
+Users
+</a>
+
+<a href="admin-orders.html">
+<span class="icon">🧾</span>
+Orders
+</a>
+
+
+<a href="admin-feedback.html">
+<span class="icon">⭐</span>
+Feedback
+</a>
+
+<a href="../login.html" class="logout">
+<span class="icon">🚪</span>
+Logout
+</a>
+
+</nav>
+
+</aside>
+
+
+<!-- CONTENT -->
+
+<main class="content">
+
+<h1>Users Management</h1>
+
+<div class="search-box">
+<input type="text" id="searchInput" placeholder="Search user by name or email">
+</div>
+
+
+<table class="category-table" id="usersTable">
+
+<thead>
+<tr>
+<th>User ID</th>
+<th>Name</th>
+<th>Email</th>
+<th>Phone</th>
+<th>Orders</th>
+</tr>
+</thead>
+
+<tbody></tbody>
+
+</table>
+
+</main>
+
+</div>
+
+<script src="admin-users.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FreshCart - Products</title>
+    <link rel="stylesheet" href="css/shop.css">
+</head>
+<body>
+<!-- ================= NAVBAR ================= -->
+    <nav class="navbar">
+    <a href="home.html" class="logo">FreshCart</a>
+    <div class="nav-links">
+        <a href="user-home.html">🏠 Home</a>
+        <a href="shop-categories.html">🗂 Categories</a>
+        <a href="shop-products.html">🛍 Shop</a>
+        <a href="shop-cart.html" class="cart-link">
+        🛒 Cart
+        <span id="cartCount" class="cart-count">0</span>
+        </a>
+        <a href="user-profile.html">👤 My Account</a>
+        <a href="login.html" class="logout">Logout</a>
+    </div>
+    </nav>
+
+
+<div class="products-hero">
+    <button class="back-btn" onclick="goBack()">← Back</button>
+    <h1 id="pageTitle">All Products</h1>
+    <p>Browse our fresh selection of groceries</p>
+    <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Search products...">
+    <button onclick="searchProducts()">Search</button>
+    </div>
+</div>
+
+<div class="products-controls">
+    
+
+    <div class="filter-pills" id="pillContainer">
+    <!-- Pills will be generated dynamically -->
+    </div>
+
+    <div class="sort-box">
+        <label>Sort by:</label>
+        <select id="sortSelect" onchange="sortProducts()">
+        <option value="az">Name: A–Z</option>
+        <option value="za">Name: Z–A</option>
+        <option value="low">Price: Low to High</option>
+        <option value="high">Price: High to Low</option>
+        </select>
+    </div>
+
+</div>
+
+
+<div id="productContainer" class="grid"></div>
+
+<script>
+const API_BASE = "http://127.0.0.1:8000";
+let currentProducts = [];
+const params = new URLSearchParams(window.location.search);
+const categoryId = params.get("category");
+const searchQuery = params.get("search");
+
+async function loadProducts() {
+    const res = await fetch(`${API_BASE}/admin/products/list`);
+    const products = await res.json();
+
+    const container = document.getElementById("productContainer");
+    container.innerHTML = "";
+
+    let filtered = products;
+
+    if (categoryId) {
+        filtered = products.filter(p => p.category_id == categoryId);
+    }
+
+    if (searchQuery) {
+            filtered = filtered.filter(p =>
+            p.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    }
+    currentProducts = filtered;
+    if (filtered.length === 0) {
+    container.innerHTML = "<p>No products found.</p>";
+    return;
+}
+renderProducts(filtered);
+updateUI();
+}
+async function loadCategories() {
+    const res = await fetch(`${API_BASE}/admin/categories/list`);
+    const categories = await res.json();
+
+    const container = document.getElementById("pillContainer");
+    container.innerHTML = "";
+
+    // Add "All" first
+    container.innerHTML += `
+        <button class="pill" data-category="all">All</button>
+    `;
+
+    // Add categories from database
+    categories.forEach(cat => {
+        container.innerHTML += `
+            <button class="pill" data-category="${cat.id}">
+                ${cat.name}
+            </button>
+        `;
+    });
+
+    attachPillEvents();
+    updateUI();
+}
+
+function attachPillEvents() {
+    document.querySelectorAll(".pill").forEach(pill => {
+        pill.addEventListener("click", function () {
+            const category = this.getAttribute("data-category");
+
+            if (category === "all") {
+                window.location.href = "shop-products.html";
+            } else {
+                window.location.href = `shop-products.html?category=${category}`;
+            }
+        });
+    });
+}
+function renderProducts(productList) {
+
+    const container = document.getElementById("productContainer");
+    container.innerHTML = "";
+
+    productList.forEach(p => {
+
+        let priceText = "";
+        let stockText = "";
+
+        if (p.unit === "piece") {
+            priceText = `₹${p.price} per piece`;
+            stockText = `Available: ${p.stock} pieces`;
+        } else {
+            priceText = `₹${p.price} for ${p.package_size} ${p.unit}`;
+            stockText = `Available: ${p.stock} packs`;
+        }
+
+        container.innerHTML += `
+    <div class="card" onclick="openProduct(${p.id})">
+
+        <img src="${API_BASE}/${p.image_path}">
+        <h3>${p.name}</h3>
+
+        <p><strong>${priceText}</strong></p>
+        <p>${stockText}</p>
+
+        <button onclick="addToCart(${p.id}, '${p.name}', ${p.price}, '${p.image_path}', event)">
+            Add to Cart
+        </button>
+
+    </div>
+`;
+    });
+}
+
+function sortProducts() {
+
+    const value = document.getElementById("sortSelect").value;
+
+    let sorted = [...currentProducts];
+
+    if (value === "az") {
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    if (value === "za") {
+        sorted.sort((a, b) => b.name.localeCompare(a.name));
+    }
+
+    if (value === "low") {
+        sorted.sort((a, b) => a.price - b.price);
+    }
+
+    if (value === "high") {
+        sorted.sort((a, b) => b.price - a.price);
+    }
+
+    renderProducts(sorted);
+}
+function searchProducts() {
+
+    const query = document.getElementById("searchInput").value.toLowerCase();
+
+    let filtered = currentProducts.filter(p =>
+        p.name.toLowerCase().includes(query)
+    );
+
+    if (filtered.length === 0) {
+        document.getElementById("productContainer").innerHTML =
+            "<p>No products found.</p>";
+        return;
+    }
+
+    renderProducts(filtered);
+    
+}
+document.getElementById("searchInput")
+    .addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+            searchProducts();
+        }
+});
+async function addToCart(id, name, price, image, event) {
+
+    event.stopPropagation();
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        alert("Please login first");
+        window.location.href = "login.html";
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `http://127.0.0.1:8000/cart/add/${id}?quantity=1`,
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.detail || "Failed to add to cart");
+            return;
+        }
+
+        showToast("Item added to cart");
+
+        // ⭐ IMPORTANT FIX
+        loadCartCount();
+
+    } catch (error) {
+        console.error(error);
+        alert("Server error");
+    }
+}
+async function loadCartCount() {
+
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    try {
+
+        const response = await fetch(
+            "http://127.0.0.1:8000/cart/my",
+            {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        const cartItems = await response.json();
+
+        let totalItems = 0;
+
+        cartItems.forEach(item => {
+            totalItems += item.quantity;
+        });
+
+        const badge = document.getElementById("cartCount");
+
+        if (!badge) return;
+
+        if (totalItems === 0) {
+            badge.style.display = "none";
+        } else {
+            badge.style.display = "flex";
+            badge.innerText = totalItems;
+        }
+
+    } catch (error) {
+        console.error("Cart count error:", error);
+    }
+}
+
+function goHome() {
+    window.location.href = "shop-categories.html";
+}
+
+function goCart() {
+    window.location.href = "shop-cart.html";
+}
+loadCategories();
+function showToast(message) {
+    const toast = document.getElementById("toast");
+    toast.innerText = message;
+    toast.classList.add("show");
+
+    setTimeout(() => {
+        toast.classList.remove("show");
+    }, 2000);
+}
+loadProducts();
+loadCartCount();
+function goBack() {
+    window.location.href = "user-home.html";
+}
+
+function updateUI() {
+    const title = document.getElementById("pageTitle");
+    const pills = document.querySelectorAll(".pill");
+
+    // Remove active from all pills
+    pills.forEach(p => p.classList.remove("active"));
+
+    if (!categoryId) {
+        title.innerText = "All Products";
+        document.querySelector('[data-category="all"]').classList.add("active");
+        return;
+    }
+
+    // Find matching pill
+    const activePill = document.querySelector(`[data-category="${categoryId}"]`);
+
+    if (activePill) {
+        activePill.classList.add("active");
+        title.innerText = activePill.innerText;
+    }
+}
+
+// Make pills clickable
+document.querySelectorAll(".pill").forEach(pill => {
+    pill.addEventListener("click", function () {
+        const category = this.getAttribute("data-category");
+
+        if (category === "all") {
+            window.location.href = "shop-products.html";
+        } else {
+            window.location.href = `shop-products.html?category=${category}`;
+        }
+    });
+});
+function openProduct(id) {
+    window.location.href = `shop-product-details.html?id=${id}`;
+}
+
+</script>
+<div id="toast" class="toast">Item added to cart</div>
+</body>
+</html>

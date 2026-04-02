@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FreshCart - Home</title>
+    <link rel="stylesheet" href="css/user-home.css">
+</head>
+<body>
+
+    <!-- ================= NAVBAR ================= -->
+    <nav class="navbar">
+    <a href="home.html" class="logo">FreshCart</a>
+    <div class="nav-links">
+        <a href="user-home.html">🏠 Home</a>
+        <a href="shop-categories.html">🗂 Categories</a>
+        <a href="shop-products.html">🛍 Shop</a>
+        <a href="shop-cart.html" class="cart-link">
+🛒 Cart
+<span id="cartCount" class="cart-count">0</span>
+</a>
+        
+        <a href="user-profile.html">👤 My Account</a>
+        <a href="login.html" class="logout">Logout</a>
+    </div>
+    </nav>
+
+    <!-- ================= HERO SECTION ================= -->
+    <section class="hero">
+    
+    <div class="hero-content">
+        <h1>Fresh Groceries Delivered Fast</h1>
+        <p>Shop quality products at the best prices.</p>
+        <div class="hero-search">
+        <input type="text" placeholder="Search for a product" id="searchInput">
+        <button type="button" onclick="searchProducts()">Search</button>
+    </div>
+    </div>
+    </section>
+
+    <!-- ================= CATEGORY SECTION ================= -->
+    <section class="section pastel-section">
+        <h2>Shop by Category</h2>
+        <div class="category-grid">
+
+            <div class="category-card" onclick="location.href='shop-products.html?category=1'">
+                <img src="http://127.0.0.1:8000/uploads/categories/fruits-413a63b4.jpg">
+                <p>Fruits</p>
+            </div>
+
+            <div class="category-card" onclick="location.href='shop-products.html?category=2'">
+                <img src="http://127.0.0.1:8000/uploads/categories/vegetables-90415318.jpg">
+                <p>Vegetables</p>
+            </div>
+
+            <div class="category-card" onclick="location.href='shop-products.html?category=3'">
+                <img src="http://127.0.0.1:8000/uploads/categories/dairyproducts-84e1a4b9.jpg">
+                <p>Dairy</p>
+            </div>
+
+            <div class="category-card" onclick="location.href='shop-products.html?category=4'">
+                <img src="http://127.0.0.1:8000/uploads/categories/spices-0c283a70.jpg">
+                <p>Spices</p>
+            </div>
+            <div class="category-card view-all-card"
+                onclick="location.href='shop-categories.html'">
+                <div class="view-all-content">
+                <span>✨ Discover More</span>
+                <h3>All Categories</h3>
+                <p>Explore Everything →</p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ================= TOP SELLING ================= -->
+    <section class="section pastel-section">
+        <h2>Top Selling</h2>
+        <div class="product-grid" id="topSellingProducts">
+        <!-- products will load here -->
+    </div>
+    </section>
+<!-- ================= WHY CHOOSE US ================= -->
+<section class="why-section">
+    <h2>Why Choose Us</h2>
+
+    <div class="why-grid">
+
+        <div class="why-card">
+            <div class="icon">🚚</div>
+            <h3>Fast Delivery</h3>
+            <p>Quick and reliable doorstep delivery.</p>
+        </div>
+
+        <div class="why-card">
+            <div class="icon">🛒</div>
+            <h3>Wide Product Range</h3>
+            <p>Groceries, essentials and more in one place.</p>
+        </div>
+
+        <div class="why-card">
+            <div class="icon">🔒</div>
+            <h3>Secure Payments</h3>
+            <p>Safe and encrypted transactions.</p>
+        </div>
+
+        <div class="why-card">
+            <div class="icon">💬</div>
+            <h3>24/7 Support</h3>
+            <p>We are here whenever you need help.</p>
+        </div>
+
+    </div>
+</section>
+<script src="js/user-home.js"></script>
+<div id="toast" class="toast">Item added to cart</div>
+
+<!-- ================= FOOTER ================= -->
+<footer class="footer">
+
+    <div class="footer-grid">
+
+        <div>
+            <h3>FreshCart</h3>
+            <p>Your trusted partner for groceries and daily essentials.</p>
+        </div>
+
+        <div>
+            <h4>Quick Links</h4>
+            <ul>
+                <li><a href="shop-categories.html">Categories</a></li>
+                <li><a href="shop-cart.html">Cart</a></li>
+            </ul>
+        </div>
+
+        <div>
+            <h4>Contact</h4>
+            <p>Email: support@freshcart.com</p>
+            <p>Phone: +91 9207091814</p>
+        </div>
+
+    </div>
+
+    <div class="footer-bottom">
+        © 2026 FreshCart. All rights reserved.
+    </div>
+
+</footer>
+</body>
+</html>

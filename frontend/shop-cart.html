@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FreshCart - Cart</title>
+    <link rel="stylesheet" href="css/shop.css">
+</head>
+<body>
+<!-- ================= NAVBAR ================= -->
+    <nav class="navbar">
+    <a href="home.html" class="logo">FreshCart</a>
+    <div class="nav-links">
+        <a href="user-home.html">🏠 Home</a>
+        <a href="shop-categories.html">🗂 Categories</a>
+        <a href="shop-products.html">🛍 Shop</a>
+        <a href="shop-cart.html" class="cart-link">
+        🛒 Cart
+        <span id="cartCount" class="cart-count">0</span>
+        </a>
+        <a href="user-profile.html">👤 My Account</a>
+        <a href="login.html" class="logout">Logout</a>
+    </div>
+    </nav>
+
+<!-- HERO SECTION -->
+<div class="cart-hero">
+
+    <button class="details-back-btn hero-back" onclick="goBack()">← Back</button>
+
+    <h1>Shopping Cart</h1>
+
+</div>
+
+<div class="cart-container">
+
+    <div class="cart-layout">
+
+        <!-- LEFT: Cart Items -->
+        <div class="cart-items" id="cartItems"></div>
+
+        <!-- RIGHT: Order Summary -->
+        <div class="order-summary">
+            <h2>Order Summary</h2>
+
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span id="subtotal">₹0</span>
+            </div>
+
+            <div class="summary-row">
+                <span>Tax (10%)</span>
+                <span id="tax">₹0</span>
+            </div>
+
+            <hr>
+
+            <div class="summary-total">
+                <span>Total</span>
+                <span id="total">₹0</span>
+            </div>
+
+            <button class="checkout-btn"
+                onclick="window.location.href='checkout.html'">
+                Proceed to Checkout
+            </button>
+
+            <button class="continue-btn" onclick="goShopping()">
+                Continue Shopping
+            </button>
+        </div>
+
+    </div>
+<!-- ================= NUTRITION ASSISTANT ================= -->
+
+<!-- ================= SMART NUTRITION ASSISTANT ================= -->
+
+<div class="nutrition-container" id="nutritionAssistant">
+
+<h2 class="nutrition-title">🌿 Smart Nutrition Assistant</h2>
+
+<div class="nutrition-grid">
+
+<!-- Nutrition Score -->
+<div class="nutrition-card">
+<h3>Nutrition Score</h3>
+<div class="score-wrapper">
+    <div class="score-circle">
+        <span id="nutritionScore">0</span>
+        <small>out of 10</small>
+    </div>
+</div>
+<p id="nutritionLabel" class="score-text">Balanced cart improves health</p>
+</div>
+
+<!-- Nutrition Insights -->
+<div class="nutrition-card">
+<h3>Nutrition Insights</h3>
+<ul id="nutritionInsights" class="insights-list"></ul>
+</div>
+
+<!-- Nutrient Balance -->
+
+
+<div class="nutrition-card nutrient-card">
+<h3>Nutrient Balance</h3>
+
+<div class="nutrient-row">
+
+<div class="nutrient-header">
+<span>🍎 Vitamins</span>
+<span id="vitaminScore">0/10</span>
+</div>
+
+<div class="progress">
+<div id="vitaminBar"></div>
+</div>
+
+</div>
+
+
+<div class="nutrient-row">
+
+<div class="nutrient-header">
+<span>🥩 Protein</span>
+<span id="proteinScore">0/10</span>
+</div>
+
+<div class="progress">
+<div id="proteinBar"></div>
+</div>
+
+</div>
+
+
+<div class="nutrient-row">
+
+<div class="nutrient-header">
+<span>🌾 Fiber</span>
+<span id="fiberScore">0/10</span>
+</div>
+
+<div class="progress">
+<div id="fiberBar"></div>
+</div>
+
+</div>
+
+
+<div class="nutrient-row">
+
+<div class="nutrient-header">
+<span>🥛 Calcium</span>
+<span id="calciumScore">0/10</span>
+</div>
+
+<div class="progress">
+<div id="calciumBar"></div>
+</div>
+
+</div>
+
+</div>
+</div>
+<h3 class="recommend-title">
+            ✨ Recommended for a Healthier Basket</h3>
+
+<div class="recommend-grid" id="recommendGrid"></div>
+
+</div>
+<script>
+const API_BASE = "http://127.0.0.1:8000";
+
+async function loadCart() {
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        alert("Please login first");
+        window.location.href = "login.html";
+        return;
+    }
+
+    const container = document.getElementById("cartItems");
+    container.innerHTML = "";
+
+    try {
+        const response = await fetch(
+            `${API_BASE}/cart/my`,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        const cart = await response.json();
+
+        if (!response.ok) {
+            console.error(cart);
+            return;
+        }
+
+        if (cart.length === 0) {
+
+            document.querySelector(".order-summary").style.display = "none";
+
+            container.innerHTML = `
+                <div class="empty-cart">
+                    <div class="empty-icon">🛍️</div>
+                    <h2>Your cart is empty</h2>
+                    <p>Add some products to get started!</p>
+                    <button onclick="goShopping()" class="browse-btn">
+                        Browse Products
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        document.querySelector(".order-summary").style.display = "block";
+
+        let subtotal = 0;
+        let nutrients = [];
+
+        cart.forEach(item => {
+
+            const itemTotal = item.price * item.quantity;
+            subtotal += itemTotal;
+
+            nutrients.push(item.nutrient_type);
+
+            container.innerHTML += `
+                <div class="cart-card">
+
+                    <img src="${API_BASE}/${item.image_path}" 
+                        class="cart-img">
+
+                    <div class="cart-info">
+                        <h3>${item.product_name}</h3>
+                        <p>₹${item.price} × ${item.quantity}</p>
+                        <p class="item-total">
+                            ₹${itemTotal.toFixed(2)}
+                        </p>
+                    </div>
+
+                    <button class="delete-btn"
+                        onclick="removeItem(${item.cart_id})">
+                        🗑
+                    </button>
+
+                </div>
+            `;
+        });
+
+        const tax = subtotal * 0.10;
+        const total = subtotal + tax;
+
+        document.getElementById("subtotal").innerText =
+            "₹" + subtotal.toFixed(2);
+
+        document.getElementById("tax").innerText =
+            "₹" + tax.toFixed(2);
+
+        document.getElementById("total").innerText =
+            "₹" + total.toFixed(2);
+
+        generateNutrition(nutrients);
+
+    } catch (error) {
+        console.error(error);
+        alert("Server error");
+    }
+}
+
+function generateNutrition(nutrients){
+
+let vitamins = 0;
+let protein = 0;
+let fiber = 0;
+let calcium = 0;
+
+/* count nutrients */
+nutrients.forEach(n => {
+
+    n = n ? n.toLowerCase() : "";
+
+   if(n=== "vitamin") vitamins +=3;
+   if(n === "fiber") fiber +=3;
+   if(n === "calcium") calcium +=3;
+   if(n === "protein") protein +=3;
+
+});
+
+/* limit to max 10 */
+
+vitamins = Math.min(vitamins,10);
+protein = Math.min(protein,10);
+fiber = Math.min(fiber,10);
+calcium = Math.min(calcium,10);
+
+/* progress bars */
+
+document.getElementById("vitaminBar").style.width = (vitamins*10)+"%";
+document.getElementById("proteinBar").style.width = (protein*10)+"%";
+document.getElementById("fiberBar").style.width = (fiber*10)+"%";
+document.getElementById("calciumBar").style.width = (calcium*10)+"%";
+
+/* numbers */
+
+document.getElementById("vitaminScore").innerText = vitamins + "/10";
+document.getElementById("proteinScore").innerText = protein + "/10";
+document.getElementById("fiberScore").innerText = fiber + "/10";
+document.getElementById("calciumScore").innerText = calcium + "/10";
+
+/* overall score */
+
+let groups = [vitamins,protein,fiber,calcium];
+let present = groups.filter(g=>g>0).length;
+
+let score = Math.round((present/4)*10);
+
+document.getElementById("nutritionScore").innerText = score;
+
+/* circle progress */
+
+const circle = document.querySelector(".score-circle");
+const angle = (score / 10) * 360;
+
+circle.style.background =
+`conic-gradient(#1fa463 ${angle}deg, #e5e7eb ${angle}deg)`;
+
+/* insights */
+
+const insights = document.getElementById("nutritionInsights");
+insights.innerHTML="";
+
+if(vitamins)
+insights.innerHTML += `<li class="good">✔ Rich in vitamins</li>`;
+else
+insights.innerHTML += `<li class="warn">⚠ Add fruits for vitamins</li>`;
+
+if(fiber)
+insights.innerHTML += `<li class="good">✔ Good fiber intake</li>`;
+else
+insights.innerHTML += `<li class="warn">⚠ Add vegetables for fiber</li>`;
+
+if(protein)
+insights.innerHTML += `<li class="good">✔ Good protein source</li>`;
+else
+insights.innerHTML += `<li class="warn">⚠ Consider protein foods</li>`;
+
+if(calcium)
+insights.innerHTML += `<li class="good">✔ Calcium present</li>`;
+else
+insights.innerHTML += `<li class="warn">⚠ Add dairy products</li>`;
+
+/* recommendations */
+
+generateRecommendations(vitamins,protein,fiber,calcium);
+
+}
+
+
+async function generateRecommendations(vitamins,protein,fiber,calcium){
+
+const grid = document.getElementById("recommendGrid")
+grid.innerHTML = ""
+
+if(protein === 0){
+const items = await getRecommendations("protein")
+items.forEach(p=>renderCard(p))
+}
+
+if(fiber === 0){
+const items = await getRecommendations("fiber")
+items.forEach(p=>renderCard(p))
+}
+
+if(calcium === 0){
+const items = await getRecommendations("calcium")
+items.forEach(p=>renderCard(p))
+}
+
+if(vitamins === 0){
+const items = await getRecommendations("vitamin")
+items.forEach(p=>renderCard(p))
+}
+
+}
+
+async function getRecommendations(nutrient){
+
+const response = await fetch(
+`${API_BASE}/admin/products/recommend/${nutrient}`
+)
+
+return await response.json()
+
+}
+
+function renderCard(p){
+
+const grid = document.getElementById("recommendGrid")
+
+grid.innerHTML += `
+<div class="product-card">
+
+<img src="${API_BASE}/${p.image_path}" class="product-img">
+<h3>${p.name}</h3>
+
+<p class="nutrient-tag">
+Rich in ${p.nutrient_type}
+</p>
+
+<p class="price">₹${p.price} per ${p.unit}</p>
+
+<button class="add-btn"
+onclick="addToCart(${p.id})">
+Add to Cart
+</button>
+
+</div>
+`
+}
+async function removeItem(cartId) {
+
+    const token = localStorage.getItem("token");
+
+    await fetch(
+        `${API_BASE}/cart/remove/${cartId}`,
+        {
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        }
+    );
+
+    loadCart();
+}
+
+async function loadCartCount() {
+
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    try {
+
+        const response = await fetch(
+            "http://127.0.0.1:8000/cart/my",
+            {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        const cartItems = await response.json();
+
+        let totalItems = 0;
+
+        cartItems.forEach(item => {
+            totalItems += item.quantity;
+        });
+
+        const badge = document.getElementById("cartCount");
+
+        if (!badge) return;
+
+        if (totalItems === 0) {
+            badge.style.display = "none";
+        } else {
+            badge.style.display = "flex";
+            badge.innerText = totalItems;
+        }
+
+    } catch (error) {
+        console.error("Cart count error:", error);
+    }
+}
+
+loadCartCount();
+
+async function addToCart(productId){
+
+const token = localStorage.getItem("token");
+
+await fetch(`${API_BASE}/cart/add/${productId}`,{
+method:"POST",
+headers:{
+"Authorization":`Bearer ${token}`
+}
+})
+
+alert("Added to cart");
+loadCartCount();
+loadCart();
+}
+function goShopping() {
+    window.location.href = "shop-products.html";
+}
+
+function goBack() {
+    window.history.back();
+}
+
+loadCart();
+</script>
+</body>
+</html>

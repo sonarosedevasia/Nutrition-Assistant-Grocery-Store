@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Account - FreshCart</title>
+    <link rel="stylesheet" href="css/shop.css">
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <a href="home.html" class="logo">FreshCart</a>
+    <div class="nav-links">
+        <a href="user-home.html">🏠 Home</a>
+        <a href="shop-categories.html">🗂 Categories</a>
+        <a href="shop-products.html">🛍 Shop</a>
+        <a href="shop-cart.html" class="cart-link">
+        🛒 Cart
+        <span id="cartCount" class="cart-count">0</span>
+        </a>
+        <a href="user-profile.html">👤 My Account</a>
+        <a href="login.html" class="logout">Logout</a>
+    </div>
+</nav>
+
+<div class="success-container">
+
+    <!-- PROFILE SECTION -->
+    <div class="summary-card profile-card profile-section">
+        <h2>My Profile</h2>
+
+        <label>Full Name</label>
+        <input type="text" id="name">
+
+        <label>Email</label>
+        <input type="text" id="email" readonly>
+
+        <label>Contact Number</label>
+        <input type="text" id="phone">
+
+        <button class="checkout-btn" onclick="updateProfile()">
+            Save Changes
+        </button>
+
+        <button class="outline-btn"
+            style="margin-top:15px;"
+            onclick="window.location.href='forgot-password.html'">
+            Change Password
+        </button>
+
+        <button class="primary-btn"
+            style="background:red; margin-top:25px;"
+            onclick="deleteAccount()">
+            Delete My Account
+        </button>
+    </div>
+
+    <!-- ORDER HISTORY -->
+    <div class="summary-card order-history-card">
+        <div class="orders-card">
+    <h2>My Orders</h2>
+
+    <table class="orders-table">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Date</th>
+                <th>Total (incl. Tax)</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="ordersTableBody">
+            <!-- Orders will load here -->
+        </tbody>
+    </table>
+</div>
+    </div>
+
+</div>
+
+<script>
+
+const API_BASE = "http://127.0.0.1:8000";
+
+async function loadProfile() {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        window.location.href = "login.html";
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `${API_BASE}/auth/me`,
+            {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Failed to load profile");
+        }
+
+        const user = await response.json();
+
+        document.getElementById("name").value = user.name;
+        document.getElementById("email").value = user.email;
+        document.getElementById("phone").value = user.phone;
+
+    } catch (error) {
+        console.error(error);
+    }
+}
+async function loadOrders() {
+
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    const tbody = document.getElementById("ordersTableBody");
+    tbody.innerHTML = "";
+
+    try {
+        const response = await fetch(
+            `${API_BASE}/orders/my`,
+            {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        const orders = await response.json();
+
+        if (orders.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align:center;">
+                        No orders found
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        orders.forEach(order => {
+
+            const totalWithTax = order.total_amount;
+
+            const formattedDate = new Date(order.created_at)
+                .toLocaleDateString();
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>#${order.id}</td>
+                    <td>${formattedDate}</td>
+                    <td>₹${totalWithTax.toFixed(2)}</td>
+                    <td>
+                    <span class="order-status ${order.order_status}">
+                    ${order.order_status}
+                    </span>
+                    </td>
+                    <td>
+                        <span style="cursor:pointer;"
+                              onclick="toggleItems(${order.id})">
+                            👁
+                        </span>
+                    </td>
+                </tr>
+
+                <tr id="items-row-${order.id}" style="display:none;">
+                    <td colspan="5">
+                        <div id="items-container-${order.id}">
+                            Loading...
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+    } catch (error) {
+        console.error(error);
+    }
+}
+async function deleteAccount(){
+
+const confirmDelete = confirm("Are you sure you want to delete your account?");
+
+if(!confirmDelete) return;
+
+const token = localStorage.getItem("token");
+
+await fetch(`${API_BASE}/users/delete-me`,{
+method:"DELETE",
+headers:{
+"Authorization":`Bearer ${token}`
+}
+});
+
+localStorage.removeItem("token");
+
+alert("Account deleted successfully");
+
+window.location.href="register.html";
+
+}
+
+async function toggleItems(orderId) {
+
+    const row = document.getElementById(`items-row-${orderId}`);
+    const container = document.getElementById(`items-container-${orderId}`);
+
+    if (row.style.display === "none") {
+
+        row.style.display = "table-row";
+
+        const token = localStorage.getItem("token");
+
+        const response = await fetch(
+            `${API_BASE}/orders/${orderId}/items`,
+            {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        const items = await response.json();
+
+        container.innerHTML = "";
+
+        items.forEach(item => {
+            container.innerHTML += `
+                <div style="margin:8px 0;">
+                    ${item.product_name} × ${item.quantity}
+                </div>
+            `;
+        });
+
+    } else {
+        row.style.display = "none";
+    }
+}
+async function loadCartCount() {
+
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    try {
+
+        const response = await fetch(
+            "http://127.0.0.1:8000/cart/my",
+            {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        const cartItems = await response.json();
+
+        let totalItems = 0;
+
+        cartItems.forEach(item => {
+            totalItems += item.quantity;
+        });
+
+        const badge = document.getElementById("cartCount");
+
+        if (!badge) return;
+
+        if (totalItems === 0) {
+            badge.style.display = "none";
+        } else {
+            badge.style.display = "flex";
+            badge.innerText = totalItems;
+        }
+
+    } catch (error) {
+        console.error("Cart count error:", error);
+    }
+}
+// loadOrders()
+// toggleItems()
+// (keep them as they are)
+
+loadProfile();
+loadOrders();
+loadCartCount();
+</script>
+</body>
+</html>

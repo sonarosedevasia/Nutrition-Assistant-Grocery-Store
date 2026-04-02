@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Categories | FreshCart</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<div class="admin-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h2 class="brand">🛒 FreshCart</h2>
+        <p class="subtitle">Admin Panel</p>
+
+        <nav>
+            <a href="admin-dashboard.html">
+                <span class="icon">📊</span> Dashboard
+            </a>
+
+            <a href="admin-categories.html" class="active">
+                <span class="icon">🏷️</span> Categories
+            </a>
+
+            <a href="admin-products.html">
+                <span class="icon">📦</span> Products
+            </a>
+
+
+            <a href="admin-users.html">
+<span class="icon">👥</span>
+Users
+</a>
+
+            <a href="admin-orders.html">
+            <span class="icon">🧾</span>
+            Orders
+            </a>
+
+            <a href="admin-feedback.html">
+<span class="icon">⭐</span>
+Feedback
+</a>
+
+            <a href="../login.html" class="logout">
+                <span class="icon"></span> Logout
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+
+        <h1>Manage Categories</h1>
+        <p class="welcome">Add, view and manage grocery categories</p>
+
+        <div class="category-layout">
+
+            <!-- ADD / EDIT CATEGORY -->
+            <div class="add-category-card">
+                <h3>Add New Category</h3>
+
+                <form class="category-form" id="categoryForm">
+
+                    <!-- Hidden field for edit mode -->
+                    <input type="hidden" id="editingCategoryId">
+
+                    <div class="form-group">
+                        <label for="categoryName">Category Name</label>
+                        <input type="text" id="categoryName" placeholder="Enter category name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="categoryImage">Upload Category Image</label>
+
+                        <div class="image-preview">
+                            <img id="previewImg" alt="Preview" />
+                        </div>
+
+                        <input type="file"
+                               id="categoryImage"
+                               accept="image/*"
+                               onchange="previewCategoryImage(event)">
+                    </div>
+
+                    <button type="submit" class="add-btn" id="submitBtn">
+                        Add Category
+                    </button>
+
+                </form>
+            </div>
+
+            <!-- EXISTING CATEGORIES -->
+            <div class="table-card">
+                <h3>Existing Categories</h3>
+
+                <table class="category-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Category Name</th>
+                            <th>Image</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <!-- Filled dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script>
+const API_BASE = "http://127.0.0.1:8000";
+
+const form = document.getElementById("categoryForm");
+const submitBtn = document.getElementById("submitBtn");
+const nameInput = document.getElementById("categoryName");
+const imageInput = document.getElementById("categoryImage");
+const editIdInput = document.getElementById("editingCategoryId");
+
+/* ---------- ADD / UPDATE CATEGORY ---------- */
+form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const name = nameInput.value.trim();
+    const image = imageInput.files[0];
+    const categoryId = editIdInput.value;
+
+    if (!name) {
+        alert("Category name required");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("name", name);
+    if (image) formData.append("image", image);
+
+    let url, method;
+
+    if (categoryId) {
+        // EDIT
+        url = `${API_BASE}/admin/categories/${categoryId}`;
+        method = "PUT";
+    } else {
+        // ADD
+        if (!image) {
+            alert("Please select an image");
+            return;
+        }
+        url = `${API_BASE}/admin/categories/add`;
+        method = "POST";
+    }
+
+    const response = await fetch(url, { method, body: formData });
+    const result = await response.json();
+
+    if (!response.ok) {
+        alert(result.detail || "Operation failed");
+        return;
+    }
+
+    resetForm();
+    loadCategories();
+});
+
+/* ---------- EDIT CATEGORY ---------- */
+function editCategory(id, name, imagePath) {
+    editIdInput.value = id;
+    nameInput.value = name;
+
+    const preview = document.getElementById("previewImg");
+
+    if (imagePath) {
+        preview.src = `${API_BASE}/${imagePath}`;
+        preview.style.display = "block";
+    }
+
+    submitBtn.innerText = "Update Category";
+    submitBtn.style.background = "#f59e0b";
+}
+
+/* ---------- DELETE CATEGORY ---------- */
+async function deleteCategory(id) {
+    if (!confirm("Delete this category?")) return;
+
+    await fetch(`${API_BASE}/admin/categories/${id}`, {
+        method: "DELETE"
+    });
+
+    loadCategories();
+}
+
+/* ---------- LOAD CATEGORIES ---------- */
+async function loadCategories() {
+    const response = await fetch(`${API_BASE}/admin/categories/list`);
+    const categories = await response.json();
+
+    const tbody = document.querySelector(".category-table tbody");
+    tbody.innerHTML = "";
+
+    categories.forEach((cat, index) => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${cat.name}</td>
+                <td>
+                    <img src="${API_BASE}/${cat.image_path}" class="table-img">
+                </td>
+                <td class="action-cell">
+                    <button class="edit-btn"
+                        onclick="editCategory(${cat.id}, '${cat.name}', '${cat.image_path}')">
+                        Edit
+                    </button>
+                    <button class="delete-btn"
+                        onclick="deleteCategory(${cat.id})">
+                        Delete
+                    </button>
+                </td>
+
+            </tr>
+        `;
+    });
+}
+
+/* ---------- RESET FORM ---------- */
+function resetForm() {
+    form.reset();
+    editIdInput.value = "";
+    submitBtn.innerText = "Add Category";
+    submitBtn.style.background = "#28a745";
+    document.getElementById("previewImg").style.display = "none";
+}
+
+/* ---------- IMAGE PREVIEW ---------- */
+function previewCategoryImage(event) {
+    const file = event.target.files[0];
+    const preview = document.getElementById("previewImg");
+
+    if (file) {
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = "block";
+    }
+}
+
+/* Initial load */
+loadCategories();
+</script>
+
+</body>
+</html>

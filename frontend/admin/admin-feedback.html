@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Feedback | FreshCart</title>
+<link rel="stylesheet" href="admin.css">
+</head>
+
+<body>
+
+<div class="admin-container">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+
+<h2 class="brand">🛒 FreshCart</h2>
+<p class="subtitle">Admin Panel</p>
+
+<nav>
+
+<a href="admin-dashboard.html">
+<span class="icon">📊</span>
+Dashboard
+</a>
+
+<a href="admin-categories.html">
+<span class="icon">🏷️</span>
+Categories
+</a>
+
+<a href="admin-products.html">
+<span class="icon">📦</span>
+Products
+</a>
+
+<a href="admin-users.html">
+<span class="icon">👥</span>
+Users
+</a>
+
+<a href="admin-orders.html">
+<span class="icon">🧾</span>
+Orders
+</a>
+
+<a href="admin-feedback.html" class="active">
+<span class="icon">⭐</span>
+Feedback
+</a>
+
+<a href="../login.html" class="logout">
+<span class="icon">🚪</span>
+Logout
+</a>
+
+</nav>
+
+</aside>
+
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+<h1>Customer Feedback</h1>
+
+<div class="search-box">
+<input type="text" placeholder="Search feedback..." id="searchInput">
+</div>
+
+<table class="category-table">
+
+<thead>
+<tr>
+<th>User</th>
+<th>Order</th>
+<th>Rating</th>
+<th>Comment</th>
+<th>Date</th>
+</tr>
+</thead>
+
+<tbody id="feedbackTable"></tbody>
+
+</table>
+
+</main>
+
+</div>
+
+<script>
+
+const API = "http://127.0.0.1:8000/feedback";
+
+async function loadFeedback(){
+
+const res = await fetch(`${API}/all`);
+const data = await res.json();
+
+const table = document.getElementById("feedbackTable");
+table.innerHTML = "";
+
+data.forEach(f => {
+
+let stars = "";
+
+for(let i=0;i<f.rating;i++){
+stars += "⭐";
+}
+
+table.innerHTML += `
+<tr>
+<td>${f.user_name}</td>
+<td>ORD${f.order_id}</td>
+<td>${stars}</td>
+<td>${f.comment}</td>
+<td>${new Date(f.created_at).toLocaleDateString()}</td>
+</tr>
+`;
+
+});
+
+}
+
+loadFeedback();
+const searchInput = document.getElementById("searchInput");
+
+searchInput.addEventListener("keyup", function(){
+
+const filter = searchInput.value.toLowerCase();
+
+const rows = document.querySelectorAll("#feedbackTable tr");
+
+rows.forEach(row => {
+
+const text = row.innerText.toLowerCase();
+
+if(text.includes(filter)){
+row.style.display = "";
+}
+else{
+row.style.display = "none";
+}
+
+});
+
+});
+</script>
+
+</body>
+</html>
